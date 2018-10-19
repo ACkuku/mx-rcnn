@@ -1,5 +1,6 @@
 import numpy as np
-
+from lib.nms.cpu_nms import cpu_soft_nms
+from lib.nms_deformable.nms import py_softnms_wrapper
 
 def bbox_flip(bbox, width, flip_x=False):
     """
@@ -163,8 +164,18 @@ def nms(dets, thresh):
     return keep
 
 
+# def soft_nms(dets, sigma=0.5, Nt=0.3, threshold=0.001, method=1):
+#
+#     keep = cpu_soft_nms(np.ascontiguousarray(dets, dtype=np.float32),
+#                         np.float32(sigma), np.float32(Nt),
+#                         np.float32(threshold),
+#                         np.uint8(method))
+#     return keep
+
+
 def im_detect(rois, scores, bbox_deltas, im_info,
-              bbox_stds, nms_thresh, conf_thresh):
+              bbox_stds, nms_thresh, conf_thresh, 
+              use_soft_nms, soft_nms_thresh, max_per_image=100):
     """rois (nroi, 4), scores (nrois, nclasses), bbox_deltas (nrois, 4 * nclasses), im_info (3)"""
     rois = rois.asnumpy()
     scores = scores.asnumpy()
@@ -187,7 +198,25 @@ def im_detect(rois, scores, bbox_deltas, im_info,
         cls_scores = scores[indexes, j, np.newaxis]
         cls_boxes = pred_boxes[indexes, j * 4:(j + 1) * 4]
         cls_dets = np.hstack((cls_boxes, cls_scores))
-        keep = nms(cls_dets, thresh=nms_thresh)
+        # add soft_nms by liusm 20180929
+        if use_soft_nms:
+            # soft_nms = py_softnms_wrapper(soft_nms_thresh, max_dets=max_per_image)
+            # keep_, all_boxes = soft_nms(cls_dets)
+            # # keep = nms(cls_dets, thresh=nms_thresh)
+            # if len(keep_):
+            #     if max_per_image > 0:
+            #         image_scores = np.hstack([all_boxes[j][..., -1] for j in range(all_boxes.shape[0])])
+            #         if len(image_scores) > max_per_image:
+            #             image_thresh = np.sort(image_scores)[-max_per_image]
+            #             for j in range(scores.shape[-1]):
+            #                 keep = np.where(all_boxes[j][:, -1] >= image_thresh)[0]
+            #         else:
+            #             keep = keep_
+            # else:
+            #     keep = keep_
+            keep = nms(cls_dets, thresh=nms_thresh)
+        else:
+            keep = nms(cls_dets, thresh=nms_thresh)
 
         cls_id = np.ones_like(cls_scores) * j
         det.append(np.hstack((cls_id, cls_scores, cls_boxes))[keep, :])

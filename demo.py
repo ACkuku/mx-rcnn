@@ -56,7 +56,8 @@ def demo_net(sym, class_names, args):
     # decode detection
     det = im_detect(rois, scores, bbox_deltas, im_info,
                     bbox_stds=args.rcnn_bbox_stds, nms_thresh=args.rcnn_nms_thresh,
-                    conf_thresh=args.rcnn_conf_thresh)
+                    conf_thresh=args.rcnn_conf_thresh, use_soft_nms=args.use_soft_nms,
+                            soft_nms_thresh=args.soft_nms_thresh, max_per_image=args.max_per_image)
 
     # print out
     for [cls, conf, x1, y1, x2, y2] in det:
@@ -97,6 +98,9 @@ def parse_args():
     parser.add_argument('--rcnn-bbox-stds', type=str, default='(0.1, 0.1, 0.2, 0.2)')
     parser.add_argument('--rcnn-nms-thresh', type=float, default=0.3)
     parser.add_argument('--rcnn-conf-thresh', type=float, default=1e-3)
+    parser.add_argument('--use-soft-nms', type=bool, default=True)
+    parser.add_argument('--soft-nms-thresh', type=float, default=0.6)
+    parser.add_argument('--max-per-image', type=int, default=100)
     args = parser.parse_args()
     args.img_pixel_means = ast.literal_eval(args.img_pixel_means)
     args.img_pixel_stds = ast.literal_eval(args.img_pixel_stds)
@@ -156,7 +160,7 @@ def get_resnet50_test(args):
 
 
 def get_resnet101_test(args):
-    from symnet.symbol_resnet import get_resnet_test
+    from symnet.symbol_resnet_dcn import get_resnet_test
     if not args.params:
         args.params = 'model/resnet101-0010.params'
     args.img_pixel_means = (0.0, 0.0, 0.0)

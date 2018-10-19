@@ -58,6 +58,60 @@ def initialize_frcnn(symbol, data_shapes, arg_params, aux_params):
     arg_params['cls_score_bias'] = mx.nd.zeros(shape=arg_shape_dict['cls_score_bias'])
     arg_params['bbox_pred_weight'] = mx.random.normal(0, 0.001, shape=arg_shape_dict['bbox_pred_weight'])
     arg_params['bbox_pred_bias'] = mx.nd.zeros(shape=arg_shape_dict['bbox_pred_bias'])
+    # sync_bn initialize
+    # arg_params['bn_sync_data_gamma'] = mx.nd.ones(shape=arg_shape_dict['bn_sync_data_gamma'])
+    # arg_params['bn_sync_data_beta'] = mx.nd.zeros(shape=arg_shape_dict['bn_sync_data_beta'])
+    # aux_params['bn_sync_data_moving_mean'] = mx.nd.ones(shape=aux_shape_dict['bn_sync_data_moving_mean'])
+    # aux_params['bn_sync_data_moving_var'] = mx.nd.zeros(shape=aux_shape_dict['bn_sync_data_moving_var'])
+    # arg_params['bn0_sync_gamma'] = mx.nd.ones(shape=arg_shape_dict['bn0_sync_gamma'])
+    # arg_params['bn0_sync_beta'] = mx.nd.zeros(shape=arg_shape_dict['bn0_sync_beta'])
+    # aux_params['bn0_sync_moving_mean'] = mx.nd.ones(shape=aux_shape_dict['bn0_sync_moving_mean'])
+    # aux_params['bn0_sync_moving_var'] = mx.nd.zeros(shape=aux_shape_dict['bn0_sync_moving_var'])
+    # arg_params['bn1_sync_gamma'] = mx.nd.ones(shape=arg_shape_dict['bn1_sync_gamma'])
+    # arg_params['bn1_sync_beta'] = mx.nd.zeros(shape=arg_shape_dict['bn1_sync_beta'])
+    # aux_params['bn1_sync_moving_mean'] = mx.nd.ones(shape=aux_shape_dict['bn1_sync_moving_mean'])
+    # aux_params['bn1_sync_moving_var'] = mx.nd.zeros(shape=aux_shape_dict['bn1_sync_moving_var'])
+    # units = (3, 4, 6, 3)
+    # for i in range(1, 5):
+    #     for j in range(1, units[i-1]+1):
+    #         for k in range(1, 4):
+    #             str_gamma = 'stage%s_unit%s_sync_bn%s' % (i, j, k)
+    #             arg_params['%s_gamma' % str_gamma] = mx.nd.ones(shape=arg_shape_dict['%s_gamma' % str_gamma])
+    #             arg_params['%s_beta' % str_gamma] = mx.nd.zeros(shape=arg_shape_dict['%s_beta' % str_gamma])
+    #             aux_params['%s_moving_mean' % str_gamma] = mx.nd.ones(shape=aux_shape_dict['%s_moving_mean' % str_gamma])
+    #             aux_params['%s_moving_var' % str_gamma] = mx.nd.zeros(shape=aux_shape_dict['%s_moving_var' % str_gamma])
+    return arg_params, aux_params
+
+
+def initialize_deform_conv(symbol, data_shapes, arg_params, aux_params):
+    '''
+    initialize added deformable convolution by liusm 20180930
+    :param symbol:
+    :param data_shapes:
+    :param arg_params:
+    :param aux_params:
+    :return:
+    '''
+    arg_shape_dict, aux_shape_dict = infer_param_shape(symbol, data_shapes)
+    # sym_internals = symbol.get_internals()
+    # for w in arg_params.keys():
+    #     print(w)
+    # stage3 (res4 b21, b22, b23)
+    arg_params['stage3_unit21_offset_weight'] = mx.nd.zeros(shape=arg_shape_dict['stage3_unit21_offset_weight'])
+    arg_params['stage3_unit21_offset_bias'] = mx.nd.zeros(shape=arg_shape_dict['stage3_unit21_offset_bias'])
+    # arg_params['stage3_unit21_deform_conv2_weight'] = mx.nd.zeros(shape=)
+    arg_params['stage3_unit22_offset_weight'] = mx.nd.zeros(shape=arg_shape_dict['stage3_unit22_offset_weight'])
+    arg_params['stage3_unit22_offset_bias'] = mx.nd.zeros(shape=arg_shape_dict['stage3_unit22_offset_bias'])
+    arg_params['stage3_unit23_offset_weight'] = mx.nd.zeros(shape=arg_shape_dict['stage3_unit23_offset_weight'])
+    arg_params['stage3_unit23_offset_bias'] = mx.nd.zeros(shape=arg_shape_dict['stage3_unit23_offset_bias'])
+    # stage4 (res5)
+    arg_params['stage4_unit1_offset_weight'] = mx.nd.zeros(shape=arg_shape_dict['stage4_unit1_offset_weight'])
+    arg_params['stage4_unit1_offset_bias'] = mx.nd.zeros(shape=arg_shape_dict['stage4_unit1_offset_bias'])
+    arg_params['stage4_unit2_offset_weight'] = mx.nd.zeros(shape=arg_shape_dict['stage4_unit2_offset_weight'])
+    arg_params['stage4_unit2_offset_bias'] = mx.nd.zeros(shape=arg_shape_dict['stage4_unit2_offset_bias'])
+    arg_params['stage4_unit3_offset_weight'] = mx.nd.zeros(shape=arg_shape_dict['stage4_unit3_offset_weight'])
+    arg_params['stage4_unit3_offset_bias'] = mx.nd.zeros(shape=arg_shape_dict['stage4_unit3_offset_bias'])
+
     return arg_params, aux_params
 
 

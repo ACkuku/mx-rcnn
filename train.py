@@ -1,14 +1,18 @@
 import argparse
 import ast
 import pprint
+import os
 
 import mxnet as mx
 from mxnet.module import Module
 
 from symdata.loader import AnchorGenerator, AnchorSampler, AnchorLoader
 from symnet.logger import logger
-from symnet.model import load_param, infer_data_shape, check_shape, initialize_frcnn, get_fixed_params
+from symnet.model import load_param, infer_data_shape, check_shape, initialize_frcnn, get_fixed_params, initialize_deform_conv
 from symnet.metric import RPNAccMetric, RPNLogLossMetric, RPNL1LossMetric, RCNNAccMetric, RCNNLogLossMetric, RCNNL1LossMetric
+
+os.environ['MXNET_CUDNN_AUTOTUNE_DEFAULT'] = '0'
+os.environ['MXNET_ENABLE_GPU_P2P'] = '0'
 
 
 def train_net(sym, roidb, args):
@@ -53,6 +57,8 @@ def train_net(sym, roidb, args):
     else:
         arg_params, aux_params = load_param(args.pretrained)
         arg_params, aux_params = initialize_frcnn(sym, data_shapes, arg_params, aux_params)
+        if args.use_deformable_conv:
+            arg_params, aux_params = initialize_deform_conv(sym, data_shapes, arg_params, aux_params)
 
     # check parameter shapes
     check_shape(sym, data_shapes + label_shapes, arg_params, aux_params)
@@ -144,6 +150,8 @@ def parse_args():
     parser.add_argument('--rcnn-fg-fraction', type=float, default=0.25)
     parser.add_argument('--rcnn-fg-overlap', type=float, default=0.5)
     parser.add_argument('--rcnn-bbox-stds', type=str, default='(0.1, 0.1, 0.2, 0.2)')
+    # if use deformable conv add by liusm 20180930
+    parser.add_argument('--use-deformable-conv', action='store_true')
     args = parser.parse_args()
     args.img_pixel_means = ast.literal_eval(args.img_pixel_means)
     args.img_pixel_stds = ast.literal_eval(args.img_pixel_stds)
@@ -233,7 +241,14 @@ def get_resnet50_train(args):
 
 
 def get_resnet101_train(args):
-    from symnet.symbol_resnet import get_resnet_train
+    from symnet.symbol_resnet_dcn import get_resnet_train
+    # use_deformable_conv = args.use_deformable_conv
+    # if use_deformable_conv:
+    #     print('x')
+    #     from symnet.symbol_resnet_dcn import get_resnet_train
+    # else:
+    #     print('y')
+    #     from symnet.symbol_resnet import get_resnet_train
     if not args.pretrained:
         args.pretrained = 'model/resnet-101-0000.params'
     if not args.save_prefix:
