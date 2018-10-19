@@ -60,7 +60,8 @@ def test_net(sym, imdb, args):
 
             det = im_detect(rois, scores, bbox_deltas, im_info,
                             bbox_stds=args.rcnn_bbox_stds, nms_thresh=args.rcnn_nms_thresh,
-                            conf_thresh=args.rcnn_conf_thresh)
+                            conf_thresh=args.rcnn_conf_thresh, use_soft_nms=args.use_soft_nms,
+                            soft_nms_thresh=args.soft_nms_thresh, max_per_image=args.max_per_image)
             for j in range(1, imdb.num_classes):
                 indexes = np.where(det[:, 0] == j)[0]
                 all_boxes[j][i] = np.concatenate((det[:, -4:], det[:, [1]]), axis=-1)[indexes, :]
@@ -97,6 +98,12 @@ def parse_args():
     parser.add_argument('--rcnn-bbox-stds', type=str, default='(0.1, 0.1, 0.2, 0.2)')
     parser.add_argument('--rcnn-nms-thresh', type=float, default=0.3)
     parser.add_argument('--rcnn-conf-thresh', type=float, default=1e-3)
+    # Add soft nms by liusm 20180929
+    parser.add_argument('--use-soft-nms', type=bool, default=True)
+    parser.add_argument('--soft-nms-thresh', type=float, default=0.6)
+    parser.add_argument('--max-per-image', type=int, default=100)
+    # if use deformable conv add by liusm 20181009
+    parser.add_argument('--use-deformable-conv', action='store_true')
     args = parser.parse_args()
     args.img_pixel_means = ast.literal_eval(args.img_pixel_means)
     args.img_pixel_stds = ast.literal_eval(args.img_pixel_stds)
